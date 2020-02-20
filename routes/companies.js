@@ -63,13 +63,18 @@ router.patch("/:handle", async function (req, res, next) {
   try {
     const result = jsonschema.validate(req.body, companySchema);
     if (!result.valid) {
+
       let listOfErrors = result.errors.map(error => error.stack);
       let error = new ExpressError(listOfErrors, 400);
+
       return next(error);
     } else {
+      
       const { handle, name, num_employees, description, logo_url } = req.body;
       const data = {name, num_employees, description, logo_url};
+
       const updatedCompany = await Company.update(data, handle);
+
       return res.json({ company: updatedCompany });
     }
   } catch (err) {

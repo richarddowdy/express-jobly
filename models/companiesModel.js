@@ -1,6 +1,7 @@
 const db = require("../db");
 const ExpressError = require("../helpers/expressError");
 const app = require("../app");
+const sqlForPartialUpdate = require("../helpers/partialUpdate")
 
 
 class Company {
@@ -58,25 +59,30 @@ class Company {
   }
 
   static async update(data, handle) {
-    const result = await db.query (
-      `UPDATE companies SET
-        name=($1),
-        num_employees=($2),
-        description=($3),
-        logo_url=($4)
-        WHERE handle=$5
-        RETURNING
-        handle,
-        name,
-        num_employees,
-        description,
-        logo_url`,
-        [data.name,
-        data.num_employees,
-        data.description, 
-        data.logo_url, 
-        handle]
-    );
+
+    const helperQuery = sqlForPartialUpdate("companies", data, "handle", handle)
+    console.log(helperQuery)
+    const result = await db.query(helperQuery.query, helperQuery.values)
+
+    // const result = await db.query (
+    //   `UPDATE companies SET
+    //     name=($1),
+    //     num_employees=($2),
+    //     description=($3),
+    //     logo_url=($4)
+    //     WHERE handle=$5
+    //     RETURNING
+    //     handle,
+    //     name,
+    //     num_employees,
+    //     description,
+    //     logo_url`,
+    //     [data.name,
+    //     data.num_employees,
+    //     data.description, 
+    //     data.logo_url, 
+    //     handle]
+    // );
     if (result.rows.length === 0) {
       throw { message: `There is no company with that handle '${handle}`, status: 404}
     } else {

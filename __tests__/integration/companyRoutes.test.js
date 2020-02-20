@@ -16,18 +16,18 @@ describe("Company Route Tests", function () {
     await db.query("DELETE FROM companies");
 
     company1 = await Company.create(
-      handle = "test1",
-      name = "TEST1",
+      handle = "handle1",
+      name = "NAME1",
       num_employees = 10,
-      description = "Description 1",
+      description = "Description1",
       logo_url = "companylogo1.com"
     )
 
     company2 = await Company.create(
-      handle = "test2",
-      name = "TEST2",
+      handle = "handle2",
+      name = "NAME2",
       num_employees = 20,
-      description = "Description 2",
+      description = "Description2",
       logo_url = "companylogo2.com"
     )
   })
@@ -38,6 +38,7 @@ describe("Company Route Tests", function () {
         .get('/companies');
 
       expect(response.statusCode).toBe(200);
+      // expect(response.body.length).toEqual(2);
       expect(response.body).toEqual({
         "companies": [
           { handle: company1.handle, name: company1.name },
@@ -60,6 +61,7 @@ describe("Company Route Tests", function () {
         })
 
       expect(response.statusCode).toBe(201);
+      // expect(response.body.length).toEqual(3);
       expect(response.body).toEqual({
         "company": {
           "handle": "SBY",
@@ -83,6 +85,7 @@ describe("Company Route Tests", function () {
           "logo_url": "subwaylogo.com"
         })
       expect(response.statusCode).toBe(400);
+      // expect(response.body.length).toEqual(2);
       expect(response.body).toEqual({
         "status": 400,
         "message": ["instance requires property \"handle\""]
@@ -93,15 +96,17 @@ describe("Company Route Tests", function () {
   describe("GET /companies/:handle", function () {
     it('gets a single company', async function () {
       let response = await request(app)
-        .get("/companies/test1")
+        .get("/companies/handle1")
 
       expect(response.statusCode).toBe(200);
+      // console.log("$$$$$$$$$$$$$$$$$",response);
+      // expect(response.body.rows??????.length).toBe(1);
       expect(response.body).toEqual({
         "company": {
-          "handle": "test1",
-          "name": "TEST1",
+          "handle": "handle1",
+          "name": "NAME1",
           "num_employees": 10,
-          "description": "Description 1",
+          "description": "Description1",
           "logo_url": "companylogo1.com"
         }
       })
@@ -124,22 +129,22 @@ describe("Company Route Tests", function () {
   describe("PATCH /companies/:handle", function(){
     it("update information on existing company", async function(){
       let response = await request(app)
-        .patch("/companies/test1")
+        .patch("/companies/handle1")
         .send({
-          "handle": "test1",
-          "name": "TEST1",
+          "handle": "handle1",
+          "name": "NAME1",
           "num_employees": 10,
-          "description": "Altered Description 1",
+          "description": "Altered Description1",
           "logo_url": "Alteredcompanylogo1.com"
         })
         
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
         "company": {
-          "handle": "test1",
-          "name": "TEST1",
+          "handle": "handle1",
+          "name": "NAME1",
           "num_employees": 10,
-          "description": "Altered Description 1",
+          "description": "Altered Description1",
           "logo_url": "Alteredcompanylogo1.com"
         }
       })
@@ -150,9 +155,9 @@ describe("Company Route Tests", function () {
   describe("PATCH /companies/:handle", function(){
     it("Fails when updating existing company with incomplete information", async function(){
       let response = await request(app)
-        .patch("/companies/test1")
+        .patch("/companies/handle1")
         .send({
-          "description": "Altered Description 1",
+          "description": "Altered Description1",
           "logo_url": "Alteredcompanylogo1.com"
         })
         
