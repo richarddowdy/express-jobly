@@ -73,7 +73,7 @@ describe("Company Route Tests", function () {
   })
 
   describe("POST /companies", function () {
-    it('Fails when creating a company with incorrect data', async function () {
+    it('Fails when creating a company without required data', async function () {
       let response = await request(app)
         .post('/companies')
         .send({
@@ -148,7 +148,7 @@ describe("Company Route Tests", function () {
   
   
   describe("PATCH /companies/:handle", function(){
-    it("Fails when updating existing company with bad information", async function(){
+    it("Fails when updating existing company with incomplete information", async function(){
       let response = await request(app)
         .patch("/companies/test1")
         .send({
