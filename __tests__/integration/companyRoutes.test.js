@@ -38,7 +38,7 @@ describe("Company Route Tests", function () {
         .get('/companies');
 
       expect(response.statusCode).toBe(200);
-      // expect(response.body.length).toEqual(2);
+      expect(response.body.companies.length).toEqual(2);
       expect(response.body).toEqual({
         "companies": [
           { handle: company1.handle, name: company1.name },
@@ -61,7 +61,6 @@ describe("Company Route Tests", function () {
         })
 
       expect(response.statusCode).toBe(201);
-      // expect(response.body.length).toEqual(3);
       expect(response.body).toEqual({
         "company": {
           "handle": "SBY",
@@ -85,7 +84,6 @@ describe("Company Route Tests", function () {
           "logo_url": "subwaylogo.com"
         })
       expect(response.statusCode).toBe(400);
-      // expect(response.body.length).toEqual(2);
       expect(response.body).toEqual({
         "status": 400,
         "message": ["instance requires property \"handle\""]
@@ -99,8 +97,6 @@ describe("Company Route Tests", function () {
         .get("/companies/handle1")
 
       expect(response.statusCode).toBe(200);
-      // console.log("$$$$$$$$$$$$$$$$$",response);
-      // expect(response.body.rows??????.length).toBe(1);
       expect(response.body).toEqual({
         "company": {
           "handle": "handle1",
@@ -188,5 +184,6 @@ describe("Company Route Tests", function () {
 
 
 afterAll(async function () {
+  await db.query("DELETE FROM companies");
   await db.end();
 })
