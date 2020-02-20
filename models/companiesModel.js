@@ -83,6 +83,18 @@ class Company {
       return result.rows[0];
     }
   }
+
+  static async remove(handle){
+    const result = await db.query(
+      `DELETE FROM companies
+       WHERE handle = $1
+       RETURNING handle`,
+       [handle]
+    )
+    if(!result.rows.length){
+      throw { message: `There is no company with that handle '${handle}`, status : 404 }
+    }
+  }
 }
 
 

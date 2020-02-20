@@ -20,8 +20,6 @@ router.get("/", async function (req, res, next) {
       let result = await Company.getQuerySearch(searchCom, minEmp, maxEmp);
 
       return res.json({ "companies": result })
-      // }
-
     }
   } catch (err) {
     return next(err)
@@ -34,7 +32,6 @@ router.post("/", async function (req, res, next) {
   try {
 
     const result = jsonschema.validate(req.body, companySchema);
-    console.log(result);
     if (!result.valid) {
       let listOfErrors = result.errors.map(error => error.stack);
       let error = new ExpressError(listOfErrors, 400);
@@ -42,7 +39,7 @@ router.post("/", async function (req, res, next) {
     } else {
       const { handle, name, num_employees, description, logo_url } = req.body;
       const createdCompany = await Company.create(handle, name, num_employees, description, logo_url);
-      return res.json({ company: createdCompany });
+      return res.status(201).json({ company: createdCompany });
     }
   } catch (err) {
     return next(err)
@@ -65,7 +62,6 @@ router.get("/:handle", async function (req, res, next) {
 router.patch("/:handle", async function (req, res, next) {
   try {
     const result = jsonschema.validate(req.body, companySchema);
-    console.log(result);
     if (!result.valid) {
       let listOfErrors = result.errors.map(error => error.stack);
       let error = new ExpressError(listOfErrors, 400);
@@ -81,6 +77,13 @@ router.patch("/:handle", async function (req, res, next) {
   }
 })
 
-
+router.delete("/:handle", async function(req, res, next){
+  try {
+    await Company.remove(req.params.handle);
+    return res.json({ message: "Company Deleted!"})
+  } catch (err){
+    return next(err);
+  }
+})
 
 module.exports = router;
