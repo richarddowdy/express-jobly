@@ -36,7 +36,12 @@ class User {
     return response.rows[0];
   }
 
-  static async create(username, password, first_name, last_name, email){
+  static async create(data){
+
+    const { username, password, first_name, last_name, email } = data
+
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
+
     let result = await db.query(
       `INSERT INTO users
         (username,
@@ -51,8 +56,9 @@ class User {
         username,
          first_name,
          last_name,
-         email`,
-       [username, password, first_name, last_name, email, false]
+         email,
+         is_admin`,
+       [username, hashedPassword, first_name, last_name, email, false]
     )
     return result.rows[0]
   }

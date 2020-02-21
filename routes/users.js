@@ -2,6 +2,8 @@ const express = require('express');
 const ExpressError = require("../helpers/expressError");
 const router = new express.Router();
 const User = require("../models/usersModel")
+const jwt = require("jsonwebtoken");
+const { SECRET_KEY } = require("../config");
 const bcrypt = require("bcrypt");
 const { BCRYPT_WORK_FACTOR } = require("../config");
 const jsonschema = require("jsonschema");
@@ -44,18 +46,16 @@ router.post("/", async function (req, res, next) {
       let error = new ExpressError(listOfErrors, 400);
       return next(error);
     }
-    const { username, password, first_name, last_name, email } = req.body
+    
 
-    const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
-
-    let createdUser = await User.create(username, hashedPassword, first_name, last_name, email)
-    return res.status(201).json({ user: createdUser });
+    let createdUser = await User.create(req.body)
+    const TOKEN = jwt.sign({ username : createdUser.username, is_admin : createdUser.is_admin }, SECRET_KEY);
+    return res.status(201).json({ user: createdUser, _token : TOKEN });
 
   } catch (err) {
     return next(err);
   }
 })
-
 
 
 router.patch("/:username", ensureCorrectUser, async function (req, res, next) {
