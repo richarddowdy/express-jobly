@@ -2,11 +2,17 @@ const express = require('express');
 const ExpressError = require("../helpers/expressError");
 const router = new express.Router();
 const User = require("../models/usersModel")
-
+const bcrypt = require("bcrypt");
+const { BCRYPT_WORK_FACTOR } = require("../config");
 const jsonschema = require("jsonschema");
 const userSchema = require("../schema/userSchema.json");
+const { ensureCorrectUser } = require("../middleware/auth")
+const { ensureLoggedIn } = require("../middleware/auth")
 
-router.get("/", async function (req, res, next) {
+/** NEED TO ADD BCRYPT SO THAT WE ARE NOT 
+ *  STORING PASSWORD IN THE DB AS PLAIN TEXT
+ */
+router.get("/", ensureLoggedIn, async function (req, res, next) {
   try {
     const result = await User.getAll()
     return res.json({ users: result });
@@ -16,9 +22,9 @@ router.get("/", async function (req, res, next) {
   }
 })
 
-router.get("/:id", async function (req, res, next) {
+router.get("/:username", ensureCorrectUser, async function (req, res, next) {
   try {
-    const result = await User.get(req.params.id);
+    const result = await User.get(req.params.username);
 
     return res.json({ user: result })
 
@@ -29,17 +35,20 @@ router.get("/:id", async function (req, res, next) {
 
 router.post("/", async function (req, res, next) {
   try {
-    console.log(req.body);
+
+/** Need Bcrypt HERE */
+
     const result = jsonschema.validate(req.body, userSchema);
     if (!result.valid) {
       let listOfErrors = result.errors.map(error => error.stack);
       let error = new ExpressError(listOfErrors, 400);
       return next(error);
     }
-    const { username, password, first_name, last_name, email, is_admin } = req.body
+    const { username, password, first_name, last_name, email } = req.body
 
-    let createdUser = await User.create(username, password, first_name, last_name, email, is_admin)
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
 
+    let createdUser = await User.create(username, hashedPassword, first_name, last_name, email)
     return res.status(201).json({ user: createdUser });
 
   } catch (err) {
@@ -49,7 +58,7 @@ router.post("/", async function (req, res, next) {
 
 
 
-router.patch("/:username", async function (req, res, next) {
+router.patch("/:username", ensureCorrectUser, async function (req, res, next) {
   try {
     const result = jsonschema.validate(req.body, userSchema);
     if (!result.valid) {
@@ -60,12 +69,7 @@ router.patch("/:username", async function (req, res, next) {
       return next(error);
     }
 
-    const username = req.params.username;
-    const { password, first_name, last_name, email, photo_url, is_admin } = req.body
-
-    const data = { password, first_name, last_name, email, photo_url, is_admin };
-
-    const updatedUser = await User.update(data, username);
+    const updatedUser = await User.update(req.body, req.body.username);
 
     return res.json({ user: updatedUser });
 
@@ -74,7 +78,7 @@ router.patch("/:username", async function (req, res, next) {
   }
 })
 
-router.delete("/:username", async function (req, res, next) {
+router.delete("/:username", ensureCorrectUser, async function (req, res, next) {
   try {
     const result = await User.remove(req.params.username);
     return res.json(result);

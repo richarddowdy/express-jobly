@@ -1,5 +1,7 @@
 const db = require("../db");
 const sqlForPartialUpdate = require("../helpers/partialUpdate")
+const bcrypt = require("bcrypt")
+const {BCRYPT_WORK_FACTOR} = require("../config")
 
 
 class User {
@@ -34,7 +36,7 @@ class User {
     return response.rows[0];
   }
 
-  static async create(username, password, first_name, last_name, email, is_admin){
+  static async create(username, password, first_name, last_name, email){
     let result = await db.query(
       `INSERT INTO users
         (username,
@@ -50,7 +52,7 @@ class User {
          first_name,
          last_name,
          email`,
-       [username, password, first_name, last_name, email, is_admin]
+       [username, password, first_name, last_name, email, false]
     )
     return result.rows[0]
   }
@@ -58,8 +60,15 @@ class User {
 
 
   static async update(data, username) {
+    // delete username from the body so that username cannot be passed into the helper
+    // function.  Username is the primary key and cannot be updated.
+    delete data.username  
 
-    const helperQuery = sqlForPartialUpdate("users", data, "username", username)
+    const { password, first_name, last_name, email, photo_url } = data;
+
+    const values = { password, first_name, last_name, email, photo_url };
+
+    const helperQuery = sqlForPartialUpdate("users", values, "username", username)
     console.log(helperQuery)
     const result = await db.query(helperQuery.query, helperQuery.values)
 
@@ -82,5 +91,28 @@ class User {
     }
     return {message: `User ${username} deleted`}
   }
+  
+  static async authenticate(username, password){
+    let result = await db.query(
+      `SELECT password FROM users
+       WHERE username = $1`,
+       [username]
+    )
+    let user = result.rows[0]
+    return user && await bcrypt.compare(password, user.password);
+  }
+  
+  static async adminStatus(username){
+    let result = await db.query(
+      `SELECT is_admin FROM users
+       WHERE username = $1`,
+      [username]
+    )
+    return result.rows[0].is_admin;
+  }
 }
+
+
+
+
 module.exports = User;
