@@ -1,6 +1,4 @@
 const db = require("../db");
-const ExpressError = require("../helpers/expressError");
-const app = require("../app");
 const sqlForPartialUpdate = require("../helpers/partialUpdate")
 
 
@@ -36,9 +34,11 @@ class Job {
     return result.rows;
   }
 
-  static async getJob(id) {
+  static async getJob(jobId) {
+
     const result = await db.query(
       `SELECT 
+      id,
       title,
       salary,
       equity,
@@ -46,9 +46,28 @@ class Job {
       date_posted
       FROM jobs
       WHERE id = $1`,
-      [id]
+      [jobId]
     )
-    return result.rows[0];
+
+    if (result.rows.length === 0) {
+      return false
+    }
+
+    const { id, title, salary, equity, company_handle, date_posted } = result.rows[0]
+
+    const result2 = await db.query(
+      `SELECT handle,
+        name,
+        num_employees,
+        description,
+        logo_url
+      FROM companies
+      WHERE handle = $1`,
+      [company_handle]
+    )
+
+    return { job: { id, title, salary, equity, date_posted, company: result2.rows[0] } };
+
   }
 
   static async update(data, jobId) {
@@ -57,22 +76,24 @@ class Job {
     const result = await db.query(helperQuery.query, helperQuery.values)
 
     if (result.rows.length === 0) {
-      throw { message: `There is no job with that id '${jobId}`, status: 404}
+      throw { message: `There is no job with that id '${jobId}`, status: 404 }
     } else {
       return result.rows[0];
     }
   }
 
-  static async remove(jobId){
+  static async remove(jobId) {
     const result = await db.query(
       `DELETE FROM jobs
        WHERE id = $1
        RETURNING id`,
-       [jobId]
+      [jobId]
     )
-    if(!result.rows.length){
-      throw { message: `There is no job with that id '${jobId}`, status : 404 }
+    if (!result.rows.length) {
+      throw { message: `There is no job with that id '${jobId}`, status: 404 }
     }
+
+    return { message: "Job Deleted!" }
   }
 
 

@@ -52,7 +52,7 @@ router.get("/:handle", async function (req, res, next) {
     if (!result) {
       throw new ExpressError("Invalid company handle", 400);
     } else {
-      return res.json({ company: result });
+      return res.json(result);
     }
   } catch (err) {
     return next(err)
@@ -69,7 +69,7 @@ router.patch("/:handle", async function (req, res, next) {
 
       return next(error);
     } else {
-      
+
       const { handle, name, num_employees, description, logo_url } = req.body;
       const data = {name, num_employees, description, logo_url};
 

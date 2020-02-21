@@ -12,17 +12,17 @@ router.post("/", async function (req, res, next) {
       let listOfErrors = result.errors.map(error => error.stack);
       let error = new ExpressError(listOfErrors, 400);
       return next(error);
-    } else {
-      const { title, salary, equity, company_handle } = req.body;
-      if (!company_handle) {
-        throw new ExpressError("Missing company handle", 400);
-      } else {
-        const createdJob = await Job.create(title, salary, equity, company_handle);
-        return res.status(201).json({ job: createdJob });
-      }
     }
+    const { title, salary, equity, company_handle } = req.body;
+    if (!company_handle) {
+      throw new ExpressError("Missing company handle", 400);
+    }
+
+    const createdJob = await Job.create(title, salary, equity, company_handle);
+    return res.status(201).json({ job: createdJob });
+
   } catch (err) {
-    return next(err)
+    return next(err);
   }
 })
 
@@ -35,13 +35,12 @@ router.get("/", async function (req, res, next) {
 
     if (minSalary > maxSQLInt || minSalary < 0 || minEquity > 0.99 || minEquity < 0) {
       throw new ExpressError("Bad request", 400);
-    } else {
-      let result = await Job.getQuerySearch(searchTitle, minSalary, minEquity);
-
-      return res.json({ "jobs": result })
     }
+    let result = await Job.getQuerySearch(searchTitle, minSalary, minEquity);
+
+    return res.json({ jobs: result })
   } catch (err) {
-    return next(err)
+    return next(err);
   }
 
 
@@ -51,10 +50,10 @@ router.get("/:id", async function (req, res, next) {
   try {
     const result = await Job.getJob(req.params.id);
     if (!result) {
-      throw new ExpressError("Invalid job id", 400);
-    } else {
-      return res.json({ job: result })
+      throw new ExpressError("Invalid job id", 404);
     }
+    return res.json(result)
+
   } catch (err) {
     return next(err)
   }
@@ -69,25 +68,25 @@ router.patch("/:id", async function (req, res, next) {
       let error = new ExpressError(listOfErrors, 400);
 
       return next(error);
-    } else {
-
-      const { id, title, salary, equity } = req.body;
-      const data = { title, salary, equity };
-
-      const updatedJob = await Job.update(data, id);
-
-      return res.json({ job: updatedJob });
     }
+
+    const { id, title, salary, equity } = req.body;
+    const data = { title, salary, equity };
+
+    const updatedJob = await Job.update(data, id);
+
+    return res.json({ job: updatedJob });
+
   } catch (err) {
     return next(err)
   }
 })
 
-router.delete("/:id", async function(req, res, next){
+router.delete("/:id", async function (req, res, next) {
   try {
-    await Job.remove(req.params.id);
-    return res.json({ message: "Job Deleted!"})
-  } catch (err){
+    const result = await Job.remove(req.params.id);
+    return res.json(result);
+  } catch (err) {
     return next(err);
   }
 })

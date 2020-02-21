@@ -1,19 +1,8 @@
 const db = require("../db");
-const ExpressError = require("../helpers/expressError");
-const app = require("../app");
 const sqlForPartialUpdate = require("../helpers/partialUpdate")
 
 
 class Company {
-
-  // static async getAll(){
-
-  //   const result = await db.query(
-  //     `SELECT handle, name
-  //      FROM companies`
-  //   )
-  //   return result.rows
-  // }
 
   static async getQuerySearch(name = "%", min = 0, max = 2147483647) {
     const wildName = `%${name}%`;
@@ -43,19 +32,42 @@ class Company {
     return result.rows[0];
   }
 
-  static async getOne(handle) {
+  static async getOne(companyHandle) {
     const result = await db.query(
       `SELECT 
-      handle,
+        handle,
         name,
         num_employees,
         description,
         logo_url
         FROM companies
         WHERE handle = $1`
-        , [handle]
+        , [companyHandle]
     ) 
-    return result.rows[0];
+    
+    if(result.rows.length === 0){
+      return false;
+    }
+
+    const { handle, name, num_employees, description, logo_url } = result.rows[0];
+
+    const result2 = await db.query(
+      `SELECT 
+      id,
+      title,
+      salary,
+      equity,
+      company_handle,
+      date_posted
+      FROM jobs
+      WHERE company_handle = $1`,
+      [handle]
+    )
+
+
+    return { company: {handle, name, num_employees, description, logo_url, jobs: 
+      result2.rows
+    }};
   }
 
   static async update(data, handle) {
@@ -64,25 +76,6 @@ class Company {
     console.log(helperQuery)
     const result = await db.query(helperQuery.query, helperQuery.values)
 
-    // const result = await db.query (
-    //   `UPDATE companies SET
-    //     name=($1),
-    //     num_employees=($2),
-    //     description=($3),
-    //     logo_url=($4)
-    //     WHERE handle=$5
-    //     RETURNING
-    //     handle,
-    //     name,
-    //     num_employees,
-    //     description,
-    //     logo_url`,
-    //     [data.name,
-    //     data.num_employees,
-    //     data.description, 
-    //     data.logo_url, 
-    //     handle]
-    // );
     if (result.rows.length === 0) {
       throw { message: `There is no company with that handle '${handle}`, status: 404}
     } else {

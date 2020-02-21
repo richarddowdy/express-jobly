@@ -13,6 +13,16 @@ CREATE TABLE jobs (
    equity REAL NOT NULL,
    constraint equity_range_check
         check(equity >= 0 and equity <= 1),
-   company_handle text REFERENCES companies,
+   company_handle text REFERENCES companies ON DELETE CASCADE,
    date_posted timestamp with time zone 
 );
+
+CREATE TABLE users (
+    username text PRIMARY KEY,
+    password text NOT NULL,
+    first_name text NOT NULL,
+    last_name text NOT NULL,
+    email text NOT NULL UNIQUE,
+    photo_url text,
+    is_admin boolean NOT NULL DEFAULT 'false'
+)

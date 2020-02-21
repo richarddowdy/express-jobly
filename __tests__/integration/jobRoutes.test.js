@@ -16,36 +16,44 @@ beforeEach(async function () {
   await db.query("DELETE FROM companies");
 
   company1 = await Company.create(
-    handle = "handle1",
-    name = "NAME1",
-    num_employees = 10,
-    description = "Description1",
-    logo_url = "companylogo1.com"
-  )
+      "handle1",
+      "NAME1",
+      10,
+      "Description1",
+      "companylogo1.com"
+    )
 
-  company2 = await Company.create(
-    handle = "handle2",
-    name = "NAME2",
-    num_employees = 20,
-    description = "Description2",
-    logo_url = "companylogo2.com"
-  )
+    company2 = await Company.create(
+      "handle2",
+      "NAME2",
+      20,
+      "Description2",
+      "companylogo2.com"
+    )
 
-  // creating test data for job table
+    // creating test data for job table
 
-  job1 = await Job.create(
-    title = "title1",
-    salary = 100,
-    equity = 0.01,
-    company_handle = "handle1"
-  )
+    job1 = await Job.create(
+      "title1",
+      100,
+      0.01,
+      "handle1"
+    )
 
-  job2 = await Job.create(
-    title = "title2",
-    salary = 200,
-    equity = 0.02,
-    company_handle = "handle2"
-  )
+    job2 = await Job.create(
+      "title2",
+      200,
+      0.02,
+      "handle2"
+    )
+
+    job3 = await Job.create(
+      "title3",
+      300,
+      0.03,
+      "handle1"
+    )
+
 })
 
 describe("GET /jobs", function () {
@@ -54,7 +62,7 @@ describe("GET /jobs", function () {
       .get('/jobs');
 
     expect(response.statusCode).toBe(200);
-    expect(response.body.jobs.length).toEqual(2);
+    expect(response.body.jobs.length).toEqual(3);
   })
 })
 
@@ -76,7 +84,7 @@ describe("POST /jobs", function () {
       .get("/jobs")
 
     expect(response2.statusCode).toBe(200);
-    expect(response2.body.jobs.length).toEqual(3);
+    expect(response2.body.jobs.length).toEqual(4);
   })
 })
 
@@ -102,9 +110,25 @@ describe("GET /jobs/:id", function () {
     let response = await request(app)
       .get(`/jobs/${job1.id}`)
 
-    let { id, ...jobInfoWithoutId } = job1;
+      console.log(response.body.company);
+    // let { id, ...jobInfoWithoutId } = job1;
     expect(response.statusCode).toBe(200);
-    expect(response.body.job).toEqual({...jobInfoWithoutId, date_posted: expect.any(String)});
+    expect(response.body).toEqual({
+      job: {
+        id: expect.any(Number),
+        title: job1.title,
+        salary: job1.salary,
+        equity: job1.equity,
+        date_posted: expect.any(String),
+        company:{
+          handle: job1.company_handle,
+          name: company1.name,
+          num_employees: company1.num_employees,
+          description: company1.description,
+          logo_url: company1.logo_url
+        }
+      }
+    });
   })
 })
 
@@ -113,9 +137,9 @@ describe("GET /jobs/:id", function () {
     let response = await request(app)
       .get(`/jobs/${job1.id - 1}`)
 
-    expect(response.statusCode).toBe(400);
+    expect(response.statusCode).toBe(404);
     expect(response.body).toEqual({
-      "status": 400,
+      "status": 404,
       "message": "Invalid job id"
     })
   })
@@ -126,7 +150,7 @@ describe("PATCH /jobs/:id", function(){
     let response = await request(app)
       .patch(`/jobs/${job1.id}`)
       .send({
-        "id" : `${job1.id}`,
+        "id" : job1.id,
         "title": "Altered_title1",
         "salary": 1100,
         "equity": 0.11,
@@ -151,7 +175,7 @@ describe("PATCH /jobs/:id", function(){
     let response = await request(app)
       .patch(`/jobs/${job1.id}`)
       .send({
-        "id" : `${job1.id}`,
+        "id" : job1.id,
         "salary": 1100,
         "equity": 0.11,
       })

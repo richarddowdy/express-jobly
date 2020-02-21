@@ -3,6 +3,7 @@ const process = require('process');
 
 const app = require("../../app");
 const db = require("../../db");
+const Job = require("../../models/jobsModel");
 const Company = require("../../models/companiesModel");
 
 process.env.NODE_ENV = "test";
@@ -13,22 +14,46 @@ describe("Company Route Tests", function () {
   let company2;
 
   beforeEach(async function () {
+    await db.query("DELETE FROM jobs");
     await db.query("DELETE FROM companies");
 
     company1 = await Company.create(
-      handle = "handle1",
-      name = "NAME1",
-      num_employees = 10,
-      description = "Description1",
-      logo_url = "companylogo1.com"
+      "handle1",
+      "NAME1",
+      10,
+      "Description1",
+      "companylogo1.com"
     )
 
     company2 = await Company.create(
-      handle = "handle2",
-      name = "NAME2",
-      num_employees = 20,
-      description = "Description2",
-      logo_url = "companylogo2.com"
+      "handle2",
+      "NAME2",
+      20,
+      "Description2",
+      "companylogo2.com"
+    )
+
+    // creating test data for job table
+
+    job1 = await Job.create(
+      "title1",
+      100,
+      0.01,
+      "handle1"
+    )
+
+    job2 = await Job.create(
+      "title2",
+      200,
+      0.02,
+      "handle2"
+    )
+
+    job3 = await Job.create(
+      "title3",
+      300,
+      0.03,
+      "handle1"
     )
   })
 
@@ -94,21 +119,39 @@ describe("Company Route Tests", function () {
   describe("GET /companies/:handle", function () {
     it('gets a single company', async function () {
       let response = await request(app)
-        .get("/companies/handle1")
+        .get(`/companies/${company1.handle}`)
 
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
-        "company": {
-          "handle": "handle1",
-          "name": "NAME1",
-          "num_employees": 10,
-          "description": "Description1",
-          "logo_url": "companylogo1.com"
+        company: {
+          handle: company1.handle,
+          name: company1.name,
+          num_employees: company1.num_employees,
+          description: company1.description,
+          logo_url: company1.logo_url,
+          jobs: [
+            {
+              id: job1.id,
+              title: job1.title,
+              salary: job1.salary,
+              equity: job1.equity,
+              company_handle: job1.company_handle,
+              date_posted: expect.any(String)
+            },
+            {
+              id: job3.id,
+              title: job3.title,
+              salary: job3.salary,
+              equity: job3.equity,
+              company_handle: job3.company_handle,
+              date_posted: expect.any(String)
+            }
+          ]
         }
       })
     })
   })
-  
+
   describe("GET /companies/:handle", function () {
     it('Fails when getting invalid company', async function () {
       let response = await request(app)
@@ -122,22 +165,22 @@ describe("Company Route Tests", function () {
     })
   })
 
-  describe("PATCH /companies/:handle", function(){
-    it("update information on existing company", async function(){
+  describe("PATCH /companies/:handle", function () {
+    it("update information on existing company", async function () {
       let response = await request(app)
-        .patch("/companies/handle1")
+        .patch(`/companies/${company1.handle}`)
         .send({
-          "handle": "handle1",
+          "handle": `${company1.handle}`,
           "name": "NAME1",
           "num_employees": 10,
           "description": "Altered Description1",
           "logo_url": "Alteredcompanylogo1.com"
         })
-        
+
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
         "company": {
-          "handle": "handle1",
+          "handle": `${company1.handle}`,
           "name": "NAME1",
           "num_employees": 10,
           "description": "Altered Description1",
@@ -146,17 +189,17 @@ describe("Company Route Tests", function () {
       })
     })
   })
-  
-  
-  describe("PATCH /companies/:handle", function(){
-    it("Fails when updating existing company with incomplete information", async function(){
+
+
+  describe("PATCH /companies/:handle", function () {
+    it("Fails when updating existing company with incomplete information", async function () {
       let response = await request(app)
         .patch("/companies/handle1")
         .send({
           "description": "Altered Description1",
           "logo_url": "Alteredcompanylogo1.com"
         })
-        
+
       expect(response.statusCode).toBe(400);
       expect(response.body).toEqual({
         "status": 400,
@@ -168,11 +211,11 @@ describe("Company Route Tests", function () {
     })
   })
 
-  describe("DELETE /companies/:handle", function(){
-    it("Deletes company", async function(){
+  describe("DELETE /companies/:handle", function () {
+    it("Deletes company", async function () {
       const response = await request(app)
         .delete(`/companies/${company1.handle}`)
-      
+
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
         "message": "Company Deleted!"
@@ -184,6 +227,7 @@ describe("Company Route Tests", function () {
 
 
 afterAll(async function () {
+  await db.query("DELETE FROM jobs")
   await db.query("DELETE FROM companies");
   await db.end();
 })
