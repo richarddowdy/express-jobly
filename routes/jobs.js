@@ -5,6 +5,9 @@ const router = new express.Router();
 const jsonschema = require("jsonschema");
 const jobSchema = require("../schema/jobSchema.json");
 
+/** NEED TO ADD BCRYPT SO THAT WE ARE NOT 
+ *  STORING PASSWORD IN THE DB AS PLAIN TEXT
+ */
 router.post("/", async function (req, res, next) {
   try {
     const result = jsonschema.validate(req.body, jobSchema);
@@ -59,32 +62,36 @@ router.get("/:id", async function (req, res, next) {
   }
 });
 
-router.patch("/:id", async function (req, res, next) {
+
+/** Work in progress
+ *  Keep getting error saying violation of not null @ password
+ */
+// router.patch("/:id", async function (req, res, next) {
+//   try {
+//     const result = jsonschema.validate(req.body, jobSchema);
+//     if (!result.valid) {
+
+//       let listOfErrors = result.errors.map(error => error.stack);
+//       let error = new ExpressError(listOfErrors, 400);
+
+//       return next(error);
+//     }
+
+//     const { id, title, salary, equity } = req.body;
+//     const data = { title, salary, equity };
+
+//     const updatedJob = await Job.update(data, id);
+
+//     return res.json({ job: updatedJob });
+
+//   } catch (err) {
+//     return next(err)
+//   }
+// })
+
+router.delete("/:username", async function (req, res, next) {
   try {
-    const result = jsonschema.validate(req.body, jobSchema);
-    if (!result.valid) {
-
-      let listOfErrors = result.errors.map(error => error.stack);
-      let error = new ExpressError(listOfErrors, 400);
-
-      return next(error);
-    }
-
-    const { id, title, salary, equity } = req.body;
-    const data = { title, salary, equity };
-
-    const updatedJob = await Job.update(data, id);
-
-    return res.json({ job: updatedJob });
-
-  } catch (err) {
-    return next(err)
-  }
-})
-
-router.delete("/:id", async function (req, res, next) {
-  try {
-    const result = await Job.remove(req.params.id);
+    const result = await Job.remove(req.params.username);
     return res.json(result);
   } catch (err) {
     return next(err);
