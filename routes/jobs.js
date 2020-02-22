@@ -5,8 +5,10 @@ const router = new express.Router();
 const jsonschema = require("jsonschema");
 const jobSchema = require("../schema/jobSchema.json");
 
+const { ensureLoggedIn, ensureAdmin } = require("../middleware/auth")
 
-router.post("/", async function (req, res, next) {
+
+router.post("/", ensureAdmin, async function (req, res, next) {
   try {
     const result = jsonschema.validate(req.body, jobSchema);
     if (!result.valid) {
@@ -27,7 +29,7 @@ router.post("/", async function (req, res, next) {
   }
 })
 
-router.get("/", async function (req, res, next) {
+router.get("/", ensureLoggedIn, async function (req, res, next) {
   try {
     const searchTitle = req.query.title;
     const minSalary = req.query.min_salary;
@@ -47,7 +49,7 @@ router.get("/", async function (req, res, next) {
 
 })
 
-router.get("/:id", async function (req, res, next) {
+router.get("/:id", ensureLoggedIn, async function (req, res, next) {
   try {
     const result = await Job.getJob(req.params.id);
     if (!result) {
@@ -62,7 +64,7 @@ router.get("/:id", async function (req, res, next) {
 
 
 
-router.patch("/:id", async function (req, res, next) {
+router.patch("/:id", ensureAdmin, async function (req, res, next) {
   try {
     const result = jsonschema.validate(req.body, jobSchema);
     if (!result.valid) {
@@ -85,9 +87,9 @@ router.patch("/:id", async function (req, res, next) {
   }
 })
 
-router.delete("/:username", async function (req, res, next) {
+router.delete("/:id", ensureAdmin, async function (req, res, next) {
   try {
-    const result = await Job.remove(req.params.username);
+    const result = await Job.remove(req.params.id);
     return res.json(result);
   } catch (err) {
     return next(err);

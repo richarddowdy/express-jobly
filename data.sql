@@ -25,4 +25,92 @@ CREATE TABLE users (
     email text NOT NULL UNIQUE,
     photo_url text,
     is_admin boolean NOT NULL DEFAULT 'false'
+);
+
+INSERT INTO companies(
+    handle,
+    name,
+    num_employees,
+    description,
+    logo_url
 )
+VALUES(
+    'handle1',
+    'name1',
+    10,
+    'description1',
+    'logo.com1'
+);
+
+INSERT INTO companies(
+    handle,
+    name,
+    num_employees,
+    description,
+    logo_url
+)
+VALUES(
+    'handle2',
+    'name2',
+    20,
+    'description2',
+    'logo.com2'
+);
+
+INSERT INTO jobs(
+    title,
+    salary,
+    equity,
+    company_handle
+)
+VALUES(
+    'title1',
+    100,
+    0.1,
+    'handle1'
+);
+
+INSERT INTO jobs(
+    title,
+    salary,
+    equity,
+    company_handle
+)
+VALUES(
+    'title2',
+    200,
+    0.2,
+    'handle2'
+);
+
+INSERT INTO users (
+    username,
+    password,
+    first_name,
+    last_name,
+    email
+)
+VALUES(
+    'user1',
+    'password1',
+    'first1',
+    'last1',
+    'email1'
+);
+
+INSERT INTO users (
+    username,
+    password,
+    first_name,
+    last_name,
+    email
+)
+VALUES(
+    'user2',
+    'password2',
+    'first2',
+    'last2',
+    'email2'
+);
+
+

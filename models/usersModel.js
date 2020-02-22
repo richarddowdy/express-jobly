@@ -71,8 +71,10 @@ class User {
     delete data.username  
 
     const { password, first_name, last_name, email, photo_url } = data;
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
 
-    const values = { password, first_name, last_name, email, photo_url };
+    const values = { password: hashedPassword, first_name, last_name, email, photo_url };
+    
 
     const helperQuery = sqlForPartialUpdate("users", values, "username", username)
     console.log(helperQuery)
